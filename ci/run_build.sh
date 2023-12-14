@@ -42,6 +42,34 @@ DEPS_DIR="${TOP_DIR}/deps"
 
 . ./ci/lib.sh
 
+command_exists() {
+	local cmd=$1
+	[ -n "$cmd" ] || return 1
+	type "$cmd" >/dev/null 2>&1
+}
+
+ensure_command_exists() {
+	local cmd="$1"
+	local package="$2"
+	[ -n "$cmd" ] || return 1
+	[ -n "$package" ] || package="$cmd"
+	! command_exists "$cmd" || return 0
+	# go through known package managers
+	for pacman in apt-get brew yum ; do
+		command_exists $pacman || continue
+		$pacman install -y $package || {
+			# Try an update if install doesn't work the first time
+			$pacman -y update && \
+				$pacman install -y $package
+		}
+		return $?
+	done
+	return 1
+}
+
+ensure_command_exists sudo
+ensure_command_exists wget
+
 build_astyle() {
     . ./ci/astyle.sh
 }
@@ -52,8 +80,7 @@ build_cppcheck() {
 
 build_drivers() {
     sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi
-    git submodule update --init libraries/iio/libtinyiiod
-    make -C ./drivers -f Makefile -j
+    make -j${NUM_JOBS} -C ./drivers -f Makefile
 }
 
 build_documentation() {

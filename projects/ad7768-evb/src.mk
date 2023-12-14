@@ -33,7 +33,8 @@ INCS += $(INCLUDE)/no_os_list.h
 INCS += $(INCLUDE)/no_os_fifo.h
 INCS += $(INCLUDE)/no_os_alloc.h
 INCS += $(PROJECT)/src/parameters.h \
-	$(INCLUDE)/no_os_mutex.h
+	$(INCLUDE)/no_os_mutex.h \
+	$(INCLUDE)/no_os_print_log.h
 
 # Add to SRC_DIRS directories to be used in the build. All .c and .h files from
 # the directory and subdirectories will be added to the build (recursively)
@@ -54,7 +55,7 @@ SRCS += $(DRIVERS)/api/no_os_gpio.c \
 	$(DRIVERS)/api/no_os_timer.c \
         $(DRIVERS)/api/no_os_spi.c
 
-ifeq (y,$(strip $(TINYIIOD)))
+ifeq (y,$(strip $(IIOD)))
 LIBRARIES += iio
 SRC_DIRS += $(NO-OS)/iio/iio_app
 

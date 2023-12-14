@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include "ad5754r.h"
 #include "no_os_alloc.h"
+#include "no_os_delay.h"
 
 /******************************************************************************/
 /******************** Variables and User Defined Data Types *******************/
@@ -217,6 +218,57 @@ int ad5754r_update_dac_all_ch_registers(struct ad5754r_dev *dev,
 }
 
 /**
+ * @brief Trigger LDAC.
+ * @param dev - The device structure.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+int ad5754r_ldac_trigger(struct ad5754r_dev *dev)
+{
+	int ret;
+
+	if (!dev)
+		return -EINVAL;
+
+	if (dev->gpio_ldac) {
+		ret = no_os_gpio_set_value(dev->gpio_ldac, NO_OS_GPIO_LOW);
+		if (ret)
+			return ret;
+
+		/* Delay must be greater than 20ns, per the datasheet. */
+		no_os_udelay(1);
+
+		return no_os_gpio_set_value(dev->gpio_ldac, NO_OS_GPIO_HIGH);
+	}
+
+	/* If no gpio is assigned use SW LOAD */
+	return ad5754r_write(dev, AD5754R_INSTR_LOAD, 0x0000);
+}
+
+/**
+ * @brief Clear DAC output for all channels.
+ * @param dev - The device structure.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+int ad5754r_clear_async(struct ad5754r_dev *dev)
+{
+	int ret;
+
+	if (!dev)
+		return -EINVAL;
+
+	if (dev->gpio_clear) {
+		ret = no_os_gpio_set_value(dev->gpio_clear, NO_OS_GPIO_LOW);
+		if (ret)
+			return ret;
+
+		return no_os_gpio_set_value(dev->gpio_clear, NO_OS_GPIO_HIGH);
+	}
+
+	/* If no gpio is assigned use SW CLEAR */
+	return ad5754r_write(dev, AD5754R_INSTR_CLEAR, 0x0000);
+}
+
+/**
  * @brief Read DAC register value for specific channel.
  * @param dev - The device structure.
  * @param chn - The index of channel being addressed.
@@ -373,7 +425,7 @@ int ad5754r_set_ch_pwrup(struct ad5754r_dev *dev, uint8_t chn,
 /**
  * @brief Apply current clamp setting for device.
  * @param dev - The device structure.
- * @param clamp_en - Clamp setting for specified channel.
+ * @param clamp_en - Clamp setting for device.
  * @return 0 in case of success, negative error code otherwise.
  */
 int ad5754r_set_current_clamp_en(struct ad5754r_dev *dev,
@@ -393,6 +445,33 @@ int ad5754r_set_current_clamp_en(struct ad5754r_dev *dev,
 		return ret;
 
 	dev->clamp_en = clamp_en;
+
+	return 0;
+}
+
+/**
+ * @brief Apply TSD setting for device.
+ * @param dev - The device structure.
+ * @param tsd_en - TSD setting for device.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+int ad5754r_set_tsd_en(struct ad5754r_dev *dev,
+		       enum ad5754r_ctrl_tsd_en tsd_en)
+{
+	int ret;
+
+	if (tsd_en > AD5754R_CTRL_TSD_EN)
+		return -EINVAL;
+
+	ret = ad5754r_update_bits(dev,
+				  AD5754R_PREP_INSTR_ADDR(AD5754R_REG_CONTROL,
+						  AD5754R_TSD_CLAMP_CLR_SDO_DAC_ADDR),
+				  AD5754R_CTRL_TSD_EN_MASK,
+				  tsd_en);
+	if (ret)
+		return ret;
+
+	dev->tsd_en = tsd_en;
 
 	return 0;
 }
@@ -646,6 +725,11 @@ int ad5754r_reg_init(struct ad5754r_dev* dev,
 
 	/* Current Clamp Enable */
 	ret = ad5754r_set_current_clamp_en(dev, init_param->clamp_en);
+	if (ret)
+		return ret;
+
+	/* TSD Enable */
+	ret = ad5754r_set_tsd_en(dev, init_param->tsd_en);
 	if (ret)
 		return ret;
 

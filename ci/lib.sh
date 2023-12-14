@@ -34,6 +34,7 @@
 #List of excluded driver folders for the documentation generation.
 
 COMMON_SCRIPTS="astyle.sh astyle_config cppcheck.sh"
+NUM_JOBS=$(nproc)
 
 get_script_path() {
 	local script="$1"
@@ -49,33 +50,6 @@ get_script_path() {
 	fi
 }
 
-command_exists() {
-	local cmd=$1
-	[ -n "$cmd" ] || return 1
-	type "$cmd" >/dev/null 2>&1
-}
-
-ensure_command_exists() {
-	local cmd="$1"
-	local package="$2"
-	[ -n "$cmd" ] || return 1
-	[ -n "$package" ] || package="$cmd"
-	! command_exists "$cmd" || return 0
-	# go through known package managers
-	for pacman in apt-get brew yum ; do
-		command_exists $pacman || continue
-		$pacman install -y $package || {
-			# Try an update if install doesn't work the first time
-			$pacman -y update && \
-				$pacman install -y $package
-		}
-		return $?
-	done
-	return 1
-}
-
-ensure_command_exists sudo
-
 echo_red() { printf "\033[1;31m$*\033[m\n"; }
 echo_green() { printf "\033[1;32m$*\033[m\n"; }
 
@@ -87,10 +61,7 @@ download_common_scripts() {
 		[ ! -f "ci/$script" ] || continue
 		[ ! -f "build/$script" ] || continue
 		mkdir -p build
-		ensure_command_exists wget
 		wget https://raw.githubusercontent.com/analogdevicesinc/no-OS/master/ci/$script \
 			-O build/$script
 	done
 }
-
-download_common_scripts

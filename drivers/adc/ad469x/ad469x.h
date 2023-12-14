@@ -97,6 +97,7 @@
 #define AD469x_REG_THRESHOLD_UB(x)  ((x << 1) | 0x40)
 #define AD469x_REG_THRESHOLD_LB(x)  ((x << 1) | 0x60)
 #define AD469x_REG_HYST_IN(x)		((x << 1) | 0x80)
+#define AD469x_REG_OFFSET_IN(x)		((x << 1) | 0xA0)
 #define AD469x_REG_GAIN_IN(x)       ((x << 1) | 0x0C0)
 #define AD469x_REG_AS_SLOT(x)		((x & 0x7F) | 0x100)
 
@@ -241,6 +242,15 @@ enum ad469x_ref_set {
 	AD469x_3P25_3P75,
 	AD469x_3P75_4P5,
 	AD469x_4P5_5P1,
+};
+
+/**
+ * @enum ad469x_ain_high_z
+ * @brief Analog input high impedance mode
+ */
+enum ad469x_ain_high_z {
+	AD469x_AIN_HIGH_Z_DISABLE,
+	AD469x_AIN_HIGH_Z_ENABLE,
 };
 
 /**
@@ -432,6 +442,16 @@ int32_t ad469x_get_reference(struct ad469x_dev *device,
 /* Set reference */
 int32_t ad469x_set_reference(struct ad469x_dev *device,
 			     enum ad469x_ref_set ref_set);
+
+/* Configure analog input high Z mode */
+int32_t ad469x_configure_ain_high_z(struct ad469x_dev *dev,
+				    uint8_t ch,
+				    enum ad469x_ain_high_z status);
+
+/* Get the status of analog input high Z mode */
+int32_t ad469x_get_ain_high_z_status(struct ad469x_dev *dev,
+				     uint8_t ch,
+				     enum ad469x_ain_high_z *status);
 
 /* Initialize the device. */
 int32_t ad469x_init(struct ad469x_dev **device,

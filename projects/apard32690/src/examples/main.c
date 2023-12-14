@@ -37,7 +37,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 #include "common_data.h"
+#include "no_os_init.h"
+
+#if defined(APARD32690_ECHO_SERVER_EXAMPLE)
+#include "tcp_echo_server_example.h"
+#elif defined(APARD32690_BASIC_EXAMPLE)
 #include "basic_example.h"
+#endif
 
 /***************************************************************************//**
  * @brief Main function execution.
@@ -46,5 +52,11 @@
 *******************************************************************************/
 int main()
 {
+#if defined(APARD32690_ECHO_SERVER_EXAMPLE)
+	return tcp_echo_server_example_main();
+#elif defined(APARD32690_BASIC_EXAMPLE)
 	return basic_example_main();
+#endif
+
+	return 0;
 }

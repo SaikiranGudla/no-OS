@@ -35,7 +35,17 @@
 set -e
 
 build_cppheck() {
-	sudo apt-get install cppcheck
+	mkdir -p build
+	pushd build
+
+	# libtinyxml2-a is a dependency package for cppcheck-1.90
+	wget http://mirrors.kernel.org/ubuntu/pool/universe/t/tinyxml2/libtinyxml2-6a_7.0.0+dfsg-1build1_amd64.deb
+	sudo dpkg -i ./libtinyxml2-6a_7.0.0+dfsg-1build1_amd64.deb
+
+	wget http://mirrors.kernel.org/ubuntu/pool/universe/c/cppcheck/cppcheck_1.90-4build1_amd64.deb
+	sudo dpkg -i ./cppcheck_1.90-4build1_amd64.deb
+
+	popd
 }
 
 parse_cppcheck_options() {
@@ -44,7 +54,7 @@ parse_cppcheck_options() {
 }
 
 run_cppcheck() {
-	cppcheck --quiet --force --error-exitcode=1 $CPPCHECK_OPTIONS .
+	cppcheck -j${NUM_JOBS} --quiet --force --error-exitcode=1 $CPPCHECK_OPTIONS .
 }
 
 build_cppheck

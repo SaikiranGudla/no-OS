@@ -96,7 +96,7 @@ build_astyle() {
 		wget --no-check-certificate "https://sourceforge.net/projects/astyle/files/astyle/astyle 3.1/astyle_3.1_linux.tar.gz"
 		tar -xzf astyle_3.1_linux.tar.gz
 		pushd ./astyle/build/gcc
-		make -j3
+		make -j${NUM_JOBS}
 		popd
 		popd
 	fi

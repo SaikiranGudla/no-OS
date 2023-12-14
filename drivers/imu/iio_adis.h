@@ -68,7 +68,6 @@ enum adis_chan_type {
 	ADIS_DELTA_VEL_X,
 	ADIS_DELTA_VEL_Y,
 	ADIS_DELTA_VEL_Z,
-	ADIS_DATA_COUNTER,
 	ADIS_NUM_CHAN,
 };
 
@@ -210,8 +209,8 @@ struct adis_iio_dev {
 #define ADIS_ACCEL_CHAN(mod, idx, adis_nb) { \
 	.ch_type = IIO_ACCEL, \
 	.modified = true, \
-	.channel = idx, \
 	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
 	.scan_index = idx, \
 	.scan_type = &adis##adis_nb##_iio_accel_scan_type,  \
         .attributes = adis_iio_accel_attrs,  \
@@ -220,8 +219,8 @@ struct adis_iio_dev {
 #define ADIS_GYRO_CHAN(mod, idx, adis_nb) { \
 	.ch_type = IIO_ANGL_VEL, \
 	.modified = true, \
-	.channel = idx, \
 	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
 	.scan_index = idx, \
 	.scan_type = &adis##adis_nb##_iio_anglvel_scan_type,  \
         .attributes = adis_iio_anglvel_attrs,  \
@@ -230,37 +229,47 @@ struct adis_iio_dev {
 #define ADIS_DELTA_ANGL_CHAN(mod, idx, adis_nb) { \
 	.ch_type = IIO_DELTA_ANGL, \
 	.modified = true, \
-	.channel = idx, \
 	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
 	.scan_index = idx, \
 	.scan_type = &adis##adis_nb##_iio_delta_angl_scan_type,  \
+        .attributes = adis_iio_delta_angl_attrs,  \
+}
+
+#define ADIS_DELTA_ANGL_CHAN_NO_SCAN(mod, idx) { \
+	.ch_type = IIO_DELTA_ANGL, \
+	.modified = true, \
+	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
         .attributes = adis_iio_delta_angl_attrs,  \
 }
 
 #define ADIS_DELTA_VEL_CHAN(mod, idx, adis_nb) { \
 	.ch_type = IIO_DELTA_VELOCITY, \
 	.modified = true, \
-	.channel = idx, \
 	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
 	.scan_index = idx, \
 	.scan_type = &adis##adis_nb##_iio_delta_vel_scan_type,  \
         .attributes = adis_iio_delta_vel_attrs,  \
 }
 
+#define ADIS_DELTA_VEL_CHAN_NO_SCAN(mod, idx) { \
+	.ch_type = IIO_DELTA_VELOCITY, \
+	.modified = true, \
+	.channel2 = IIO_MOD_##mod, \
+	.address = idx, \
+        .attributes = adis_iio_delta_vel_attrs,  \
+}
+
 #define ADIS_TEMP_CHAN(idx, adis_nb) { \
 	.ch_type = IIO_TEMP, \
-	.channel = idx, \
+	.channel = 0, \
+	.indexed = true, \
+	.address = idx, \
 	.scan_index = idx, \
 	.scan_type = &adis##adis_nb##_iio_temp_scan_type,  \
         .attributes = adis_iio_temp_attrs,  \
-}
-
-#define ADIS_DATA_COUNTER_CHAN(idx, adis_nb) { \
-	.ch_type = IIO_COUNT, \
-	.channel = idx, \
-	.scan_index = idx, \
-	.scan_type = &adis##adis_nb##_iio_data_counter_scan_type,  \
-        .attributes = NULL,  \
 }
 
 /******************************************************************************/

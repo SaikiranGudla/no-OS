@@ -92,16 +92,8 @@ static struct scan_type adis1657x_iio_delta_angl_scan_type = {
 
 static struct scan_type adis1657x_iio_temp_scan_type = {
 	.sign 		= 's',
-	.realbits 	= 32,
-	.storagebits 	= 32,
-	.shift 		= 0,
-	.is_big_endian 	= true
-};
-
-static struct scan_type adis1657x_iio_data_counter_scan_type = {
-	.sign 		= 'u',
-	.realbits 	= 32,
-	.storagebits 	= 32,
+	.realbits 	= 16,
+	.storagebits 	= 16,
 	.shift 		= 0,
 	.is_big_endian 	= true
 };
@@ -120,7 +112,6 @@ static struct iio_channel adis1657x_channels[] = {
 	ADIS_DELTA_VEL_CHAN	(X, 	ADIS_DELTA_VEL_X, 	1657x),
 	ADIS_DELTA_VEL_CHAN	(Y, 	ADIS_DELTA_VEL_Y, 	1657x),
 	ADIS_DELTA_VEL_CHAN	(Z, 	ADIS_DELTA_VEL_Z, 	1657x),
-	ADIS_DATA_COUNTER_CHAN	(ADIS_DATA_COUNTER,		1657x),
 };
 
 struct iio_attribute adis1657x_debug_attrs[] = {
@@ -463,7 +454,7 @@ struct iio_attribute adis1657x_debug_attrs[] = {
 		.priv = ADIS_USR_SCR_3,
 	},
 	{
-		.name = "flash_counter",
+		.name = "flash_count",
 		.show = adis_iio_read_debug_attrs,
 		.priv = ADIS_FLS_MEM_WR_CNTR,
 	},

@@ -1476,7 +1476,7 @@ int32_t hmc7044_init(struct hmc7044_dev **device,
 	struct hmc7044_dev *dev;
 	int32_t ret;
 	unsigned int i;
-	struct no_os_clk_desc **clocks;
+	struct no_os_clk_desc **clocks = NULL;
 	struct no_os_clk_init_param clk_init;
 	const char *names[HMC7044_NUM_CHAN] = {
 		"clock_0", "clock_1", "clock_2", "clock_3", "clock_4",
@@ -1493,11 +1493,11 @@ int32_t hmc7044_init(struct hmc7044_dev **device,
 		return ret;
 
 	if (init_param->export_no_os_clk) {
-		clocks = malloc(HMC7044_NUM_CHAN * sizeof(struct no_os_clk_desc *));
+		clocks = no_os_calloc(HMC7044_NUM_CHAN, sizeof(struct no_os_clk_desc *));
 		if (!clocks)
 			return -1;
 		for (i = 0; i < HMC7044_NUM_CHAN; i++) {
-			clocks[i] = malloc(sizeof(struct no_os_clk_desc));
+			clocks[i] = no_os_calloc(1, sizeof(struct no_os_clk_desc));
 			if (!clocks[i])
 				return -1;
 			/* Initialize clk component */

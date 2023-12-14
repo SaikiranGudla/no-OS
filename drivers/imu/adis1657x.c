@@ -161,24 +161,21 @@ static const struct adis_clk_freq_limit adis1657x_sampling_clk_limits = {
 
 /* Values from datasheet for 32-bit data */
 static const struct adis_scale_fractional adis1657x_anglvel_scale[] = {
-	[ADIS16575_2] = {1, RAD_TO_DEGREE(2621440)},
-	[ADIS16575_3] = {1, RAD_TO_DEGREE(655360)},
-	[ADIS16576_2] = {1, RAD_TO_DEGREE(2621440)},
-	[ADIS16576_3] = {1, RAD_TO_DEGREE(655360)},
-	[ADIS16577_2] = {1, RAD_TO_DEGREE(2621440)},
-	[ADIS16577_3] = {1, RAD_TO_DEGREE(655360)},
+	[ADIS16575_2] = {1, RAD_TO_DEGREE(40 << 16)},
+	[ADIS16575_3] = {1, RAD_TO_DEGREE(10 << 16)},
+	[ADIS16576_2] = {1, RAD_TO_DEGREE(40 << 16)},
+	[ADIS16576_3] = {1, RAD_TO_DEGREE(10 << 16)},
+	[ADIS16577_2] = {1, RAD_TO_DEGREE(40 << 16)},
+	[ADIS16577_3] = {1, RAD_TO_DEGREE(10 << 16)},
 };
 
 static const struct adis_scale_fractional adis1657x_accl_scale[] = {
-	/* datasheet scale is in LSB/g = 262144000, need to convert to m/s^2 262144000/9.80665 = 26731249 */
-	[ADIS16575_2] = {1, 26731249},
-	[ADIS16575_3] = {1, 26731249},
-	/* datasheet scale is in LSB/g = 52428800, need to convert to m/s^2 52428800/9.80665 = 5346250 */
-	[ADIS16576_2] = {1, 5346250},
-	[ADIS16576_3] = {1, 5346250},
-	/* datasheet scale is in LSB/g = 52428800, need to convert to m/s^2 52428800/9.80665 = 5346250 */
-	[ADIS16577_2] = {1, 5346250},
-	[ADIS16577_3] = {1, 5346250},
+	[ADIS16575_2] = {1, M_S_2_TO_G(4000 << 16)},
+	[ADIS16575_3] = {1, M_S_2_TO_G(4000 << 16)},
+	[ADIS16576_2] = {1, M_S_2_TO_G(800 << 16)},
+	[ADIS16576_3] = {1, M_S_2_TO_G(800 << 16)},
+	[ADIS16577_2] = {1, M_S_2_TO_G(800 << 16)},
+	[ADIS16577_3] = {1, M_S_2_TO_G(800 << 16)},
 };
 
 static const struct adis_scale_fractional_log2 adis1657x_deltaangl_scale[] = {
@@ -224,11 +221,11 @@ struct adis_chip_info adis1657x_chip_info = {
 	.read_delay 		= 5,
 	.write_delay 		= 0,
 	.cs_change_delay 	= 5,
-	.has_fifo		= true,
 	.filt_size_var_b_max 	= 6,
 	.dec_rate_max 		= 1999,
 	.sync_mode_max 		= ADIS_SYNC_OUTPUT,
 	.fls_mem_wr_cntr_max 	= 100000,
 	.int_clk		= 2000,
 	.bias_corr_tbc_max	= 12,
+	.flags			= ADIS_HAS_BURST32 | ADIS_HAS_BURST_DELTA_DATA | ADIS_HAS_FIFO,
 };

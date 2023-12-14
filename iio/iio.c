@@ -1,8 +1,6 @@
 /***************************************************************************//**
  *   @file   iio.c
  *   @brief  Implementation of iio.
- *   This module implements read/write ops, required by libtinyiiod and further
- *   calls show/store functions, corresponding to device/channel/attribute.
  *   @author Cristian Pop (cristian.pop@analog.com)
  *   @author Mihail Chindris (mihail.chindris@analog.com)
 ********************************************************************************
@@ -1099,16 +1097,29 @@ int iio_process_trigger_type(struct iio_desc *desc, char *trigger_name)
 
 static uint32_t bytes_per_scan(struct iio_channel *channels, uint32_t mask)
 {
-	uint32_t cnt, i;
+	uint32_t cnt, i, length, largest = 1;
 
 	cnt = 0;
 	i = 0;
 	while (mask) {
-		if ((mask & 1))
-			cnt += channels[i].scan_type->storagebits / 8;
+		if ((mask & 1)) {
+			length = channels[i].scan_type->storagebits / 8;
+
+			if (length > largest)
+				largest = length;
+
+			if (cnt % length)
+				cnt += 2 * length - (cnt % length);
+			else
+				cnt += length;
+		}
+
 		mask >>= 1;
 		++i;
 	}
+
+	if (cnt % largest)
+		cnt += largest - (cnt % largest);
 
 	return cnt;
 }
@@ -1184,9 +1195,11 @@ static int iio_open_dev(struct iiod_ctx *ctx, const char *device,
 
 	if (dev->dev_descriptor->pre_enable) {
 		ret = dev->dev_descriptor->pre_enable(dev->dev_instance, mask);
-		if (NO_OS_IS_ERR_VALUE(ret) && dev->buffer.allocated) {
-			no_os_free(dev->buffer.cb.buff);
-			dev->buffer.allocated = 0;
+		if (NO_OS_IS_ERR_VALUE(ret)) {
+			if (dev->buffer.allocated) {
+				no_os_free(dev->buffer.cb.buff);
+				dev->buffer.allocated = 0;
+			}
 			return ret;
 		}
 	}
@@ -1297,8 +1310,6 @@ static int iio_refill_buffer(struct iiod_ctx *ctx, const char *device)
 /**
  * @brief Read chunk of data from RAM to pbuf. Call
  * "iio_transfer_dev_to_mem()" first.
- * This function is probably called multiple times by libtinyiiod after a
- * "iio_transfer_dev_to_mem" call, since we can only read "bytes_count" bytes.
  * @param device - String containing device name.
  * @param pbuf - Buffer where value is stored.
  * @param offset - Offset to the remaining data after reading n chunks.
@@ -1342,9 +1353,6 @@ static int iio_read_buffer(struct iiod_ctx *ctx, const char *device, char *buf,
 
 /**
  * @brief Write chunk of data into RAM.
- * This function is probably called multiple times by libtinyiiod before a
- * "iio_transfer_mem_to_dev" call, since we can only write "bytes_count" bytes
- * at a time.
  * @param device - String containing device name.
  * @param buf - Values to write.
  * @param offset - Offset in memory after the nth chunk of data.
@@ -1839,8 +1847,7 @@ static int32_t iio_init_trigs(struct iio_desc *desc,
 }
 
 /**
- * @brief Set communication ops and read/write ops that will be called
- * from "libtinyiiod".
+ * @brief Set communication ops and read/write ops
  * @param desc - iio descriptor.
  * @param init_param - appropriate init param.
  * @return 0 in case of success or negative value otherwise.

@@ -115,7 +115,7 @@ static int32_t iio_print_uart_info_message(struct no_os_uart_desc **uart_desc,
 static int32_t print_uart_hello_message(struct no_os_uart_desc **uart_desc,
 					struct no_os_uart_init_param *user_uart_params)
 {
-#if defined(LINUX_PLATFORM) || defined(NO_OS_NETWORKING)
+#if defined(LINUX_PLATFORM) || defined(NO_OS_NETWORKING) || defined(NO_OS_LWIP_NETWORKING)
 	return 0;
 #else
 	const char *uart_data_size[] = { "5", "6", "7", "8", "9" };
@@ -123,7 +123,7 @@ static int32_t print_uart_hello_message(struct no_os_uart_desc **uart_desc,
 	const char *uart_stop[] = { "1", "2" };
 	char message[512];
 	uint32_t msglen = sprintf(message,
-				  "Running TinyIIOD server...\n"
+				  "Running IIOD server...\n"
 				  "If successful, you may connect an IIO client application by:\n"
 				  "1. Disconnecting the serial terminal you use to view this message.\n"
 				  "2. Connecting the IIO client application using the serial backend configured as shown:\n"
@@ -148,9 +148,9 @@ static int32_t print_uart_error_message(struct no_os_uart_desc **uart_desc,
 {
 	char message[512];
 	uint32_t msglen = sprintf(message,
-				  "TinyIIOD server failed with code %d.\n",
+				  "IIOD server failed with code %d.\n",
 				  (int)status);
-#if defined(LINUX_PLATFORM) || defined(NO_OS_NETWORKING)
+#if defined(LINUX_PLATFORM) || defined(NO_OS_NETWORKING) || defined(NO_OS_LWIP_NETWORKING)
 	(void)msglen;
 	printf("%s", message);
 	return 0;
@@ -221,7 +221,7 @@ static int32_t network_setup(struct iio_init_param *iio_init_param,
 
 	char buff[100];
 	wifi_get_ip(wifi, buff, 100);
-	printf("Tinyiiod ip is: %s\n", buff);
+	printf("iiod ip is: %s\n", buff);
 
 	wifi_get_network_interface(wifi, &socket_param.net);
 #endif
@@ -237,7 +237,7 @@ static int32_t network_setup(struct iio_init_param *iio_init_param,
 static int32_t uart_setup(struct no_os_uart_desc **uart_desc,
 			  struct no_os_uart_init_param *uart_init_par)
 {
-#ifdef LINUX_PLATFORM
+#if defined(LINUX_PLATFORM) || defined(NO_OS_LWIP_NETWORKING)
 	*uart_desc = NULL;
 	return 0;
 #endif
@@ -461,9 +461,11 @@ int iio_app_remove(struct iio_app_desc *app)
 		return ret;
 #endif
 
-	ret = no_os_uart_remove(app->uart_desc);
-	if (ret)
-		return ret;
+	if (app->uart_desc) {
+		ret = no_os_uart_remove(app->uart_desc);
+		if (ret)
+			return ret;
+	}
 
 	ret = iio_remove(app->iio_desc);
 	if (ret)
